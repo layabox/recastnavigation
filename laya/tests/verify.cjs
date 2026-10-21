@@ -6,7 +6,25 @@ const {load, inventory, root} = require('./runtime.cjs');
 const output = path.resolve(process.argv.slice(2).find(arg => !arg.startsWith('--')) || path.join(root, 'dist'));
 const golden = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/api.json')));
 (async () => {
-    let checks = 0;
+    const {inspectBytecode} = await import('../scripts/check-bytecode.mjs');
+    const bytecode = await inspectBytecode(path.join(output, 'recast-navigation.js'));
+    assert.deepEqual(bytecode.oversized, [], 'Generated JS exceeds the V8 bytecode budget');
+    console.log(`PASS JS bytecode: ${bytecode.functions.length} functions, largest ${bytecode.functions[0].bytes} bytes`);
+    // Detect future minifier names and prove inspection never executes initializers.
+    const os = require('node:os');
+    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'recast-bytecode-test-'));
+    try {
+        const sample = path.join(scratch, 'future-output.js');
+        fs.writeFileSync(sample, "throw new Error('must not execute');\nfunction futureMinifierName(a){" +
+            'a=(a+1)|0;'.repeat(12000) + 'return a;}');
+        const large = await inspectBytecode(sample);
+        assert.ok(large.oversized.some(f => f.name === 'futureMinifierName'));
+        fs.writeFileSync(sample, 'function broken(');
+        await assert.rejects(inspectBytecode(sample), /Bytecode inspection failed/);
+    } finally {
+        fs.rmSync(scratch, {recursive:true, force:true});
+    }
+    let checks = 3;
     for (const backend of ['wasm', 'js']) {
         const file = path.join(output, backend === 'wasm' ? 'recast-navigation-wasm.js' : 'recast-navigation.js');
         const {module:m, calls} = await load(file, {restricted: true});

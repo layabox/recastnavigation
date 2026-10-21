@@ -39,6 +39,20 @@ EMXX=/path/to/emsdk/upstream/emscripten/em++ npm run build
 
 构建不自动复制、安装或修改任何引擎文件。生成文件和 node_modules 不提交到 Git。
 
+## V8 大函数限制
+
+纯 JS 和 WASM 均保留 `-O3`。纯 JS 在 wasm-opt **和后续 wasm2js** 阶段设置 `--one-caller-inline-max-function-size=500`，避免默认无限制的单调用者内联把整个建图/Crowd 流程合并成大函数。构建临时创建 Binaryen 工具视图，并包装 wasm2js 传入参数；退出后删除临时目录，不修改 emsdk 或官方 C++ 源码。WASM 不使用该限制。
+
+构建和 `npm test` 都会编译检查**所有函数**的 V8 bytecode，任意函数超过 **61,440 字节**就失败；不依赖压缩函数名，也不执行库初始化。此预算沿用引擎 `scripts/checkJsBytecode.mjs`，不是 JS 源码字符数限制。检查器只保存函数名与字节码大小，不保留完整反汇编。
+
+```sh
+npm run check:bytecode
+# 可指定 IDE Electron 或其他目标 V8 可执行文件：
+JS_BYTECODE_NODE=/path/to/Electron npm run check:bytecode
+```
+
+不同 V8 版本的字节码大小和优化策略可能变化；更新 Node/Electron 或工具链后应重新检查。61,440 字节是当前构建预算，满足预算不代表所有函数一定会被运行时优化。外部引擎检查脚本固定监控旧产物函数名，不能直接复用其旧 watchlist 判断新产物。
+
 ## 加载与小游戏约定
 
 WASM 脚本保留以下模块外层包装：
@@ -55,8 +69,9 @@ window.Recast = Laya.WasmAdapter.create(Recast, "recast-navigation-wasm.wasm");
 
 ## 测试
 
-`npm test` 无需引擎，覆盖 53 组检查：
+`npm test` 无需引擎，覆盖 56 组检查：
 
+- 全部生成 JS 函数的 V8 字节码大小；超限、语法错误及压缩函数改名的检测。
 - 原模块类、方法参数、属性和枚举；关键返回类型、状态码、原生 mask 和几何缓存行为。
 - 六个场景，每场景 480 帧 Crowd 输出、状态和路径的严格哈希；覆盖三分区、断路、off-mesh link、tile 重建与 agent 增删。
 - 45° 坡面在 0°/30°/60° 最大坡度下的完整路径结果，组合三种分区和正反绕序，JS/WASM 各 18 项。
