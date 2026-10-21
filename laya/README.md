@@ -69,9 +69,10 @@ window.Recast = Laya.WasmAdapter.create(Recast, "recast-navigation-wasm.wasm");
 
 ## 测试
 
-`npm test` 无需引擎，覆盖 56 组检查：
+`npm test` 无需引擎，覆盖 90 组检查：
 
 - 全部生成 JS 函数的 V8 字节码大小；超限、语法错误及压缩函数改名的检测。
+- JS/WASM 各 17 项几何更新检查：坡度/区域标志变化、重新初始化、旋转和保留的可写几何视图。
 - 原模块类、方法参数、属性和枚举；关键返回类型、状态码、原生 mask 和几何缓存行为。
 - 六个场景，每场景 480 帧 Crowd 输出、状态和路径的严格哈希；覆盖三分区、断路、off-mesh link、tile 重建与 agent 增删。
 - 45° 坡面在 0°/30°/60° 最大坡度下的完整路径结果，组合三种分区和正反绕序，JS/WASM 各 18 项。
@@ -94,6 +95,26 @@ LAYAAIR_ROOT=/absolute/path/to/LayaAir npm run test:engine
 ```
 
 该命令以只读方式载入引擎的 build/libs，在隔离 VM 中注入本 fork 的模块，JS/WASM 各执行 65 项 2D/3D 导航检查，不复制文件进引擎。宿主模拟测试不能替代淘宝、微信、抖音真机验收。
+
+## 性能基准
+
+`tests/performance.cjs` 在同一进程的独立 VM 中串行交错 A/B、B/A，分别计时 `addTile` 和 `updateCrowd`；查询、轨迹哈希和等待事件循环的时间不计入调用耗时。保留每批原始数据、冷调用和堆容量，支持 Node wall time，以及新 Node/Electron 的线程 CPU 时间。没有基于绝对耗时的 CI 断言。
+
+```sh
+npm run bench -- --baseline=/path/to/previous/recast-navigation.js --mode=build
+npm run bench -- --baseline=/path/to/previous/recast-navigation.js --mode=build --scene=plane --density=8 --terrain=wave --warmup=200 --iterations=100
+npm run bench -- --baseline=/path/to/previous/recast-navigation.js --mode=crowd --scene=plane --agents=128 --trials=12
+# 用 IDE 实际 V8 运行（路径按本机安装调整）：
+ELECTRON_RUN_AS_NODE=1 /path/to/LayaAirIDE tests/performance.cjs --baseline=/previous/recast-navigation.js --mode=crowd --scene=plane
+# WASM 配套文件必须在 JS 同目录，基准和候选均显式指定：
+npm run bench -- --baseline=/previous/recast-navigation-wasm.js --candidate=dist/recast-navigation-wasm.js --mode=crowd
+```
+
+默认包含六个场景，每批 Crowd 480 帧、24 个 agent，缓存 agent 的借用句柄并逐帧让出事件循环；128-agent 模式使用 plane 场景。`--density=8 --scene=plane` 为 8,192 个三角形，`--terrain=flat/ramp/wave` 分别测水平面、缓坡和起伏地形。默认建图预热 1000 次，6 批各 200 次；Crowd 先重放完整轨迹三次再测量。参数以 `--name=value` 传入。
+
+**VM 使用自己的 Math 内建函数，只在 VM 内设置固定随机数种子。** 注入宿主 `Math` 或 `Object.create(Math)` 会引入跨 realm 调用，破坏性能基准的代表性；基准显式检查 `Math.fround` / `Math.sqrt` 不来自宿主。旧记录中基于此做法得出的 JS 回退比例和阶段性慢帧结论已撤回，见验证记录。此问题不改变已验证的行为哈希或产物字节码大小。
+
+layers 使用官方修复后的行为，与旧引擎的查询/轨迹不同，应单独报告。基准不自动修改任何行为期望值，也不把性能变化等同于正确性通过。
 
 ## 同步官方上游
 

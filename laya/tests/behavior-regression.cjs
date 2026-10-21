@@ -41,14 +41,15 @@ function plain(value) {
 }
 async function scenario(spec) {
     const diagnostics = [];
-    let seed = 123456789;
-    const randomMath = Object.create(Math);
-    randomMath.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-    const context = { window: {}, Math: randomMath, performance, setTimeout, clearTimeout,
+    const context = { window: {}, performance, setTimeout, clearTimeout,
         WebAssembly, URL, TextDecoder, TextEncoder,
         Laya: { WasmAdapter: { create: module => module } },
         console: Object.fromEntries(['log','info','warn','error'].map(level => [level, (...args) => diagnostics.push([level, args.map(String)])])) };
-    vm.runInNewContext(source, context, { filename: sourcePath });
+    // Keep Math intrinsics in the library realm; importing the host Math object
+    // changes V8 optimization and makes JS performance measurements misleading.
+    vm.createContext(context);
+    vm.runInContext('let randomSeed=123456789; Math.random=()=>((randomSeed=(Math.imul(randomSeed,1664525)+1013904223)>>>0)/4294967296);', context);
+    vm.runInContext(source, context, {filename:sourcePath});
     const options = sourcePath.endsWith("-wasm.js") ? { wasmBinary: fs.readFileSync(sourcePath.replace(/\.js$/, ".wasm")) } : {};
     const m = await context.Recast(options);
     const nav = new m.dtNavMesh();

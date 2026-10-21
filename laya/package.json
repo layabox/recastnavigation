@@ -8,6 +8,8 @@
     "build": "sh scripts/build.sh",
     "test": "node tests/verify.cjs",
     "check:bytecode": "node scripts/check-bytecode.mjs dist/recast-navigation.js",
+    "bench": "node tests/performance.cjs",
+    "test:geometry": "node tests/geometry-regression.cjs",
     "test:slope": "node tests/slope-regression.cjs",
     "test:engine": "node tests/run-engine.cjs",
     "lock-source": "node scripts/update-source-lock.mjs"

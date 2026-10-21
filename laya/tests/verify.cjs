@@ -75,6 +75,11 @@ const golden = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/api.jso
         if (slope.status !== 0) throw new Error(`${backend}: slope regression failed\n${slope.stderr}`);
         console.log(`PASS ${backend}: 18 slope checks`);
         checks += 18;
+        const geometry=spawnSync(process.execPath,[path.join(__dirname,'geometry-regression.cjs'),file],
+            {encoding:'utf8',maxBuffer:1024*1024});
+        if(geometry.status!==0)throw new Error(`${backend}: geometry update regression failed\n${geometry.stderr}`);
+        console.log(`PASS ${backend}: 17 geometry update and borrowed-view checks`);
+        checks += 17;
     }
     const wasmFile = path.join(output,'recast-navigation-wasm.js');
     for (const streaming of [true,false]) {
