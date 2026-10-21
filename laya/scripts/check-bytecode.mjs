@@ -4,7 +4,8 @@ import {spawn} from 'node:child_process';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-export const MAX_BYTECODE_SIZE = 60 * 1024;
+// Keep at least 10 KiB below the 60 KiB TurboFan threshold used by tested V8 builds.
+export const MAX_BYTECODE_SIZE = 50 * 1024;
 const script = fileURLToPath(import.meta.url);
 
 // Compile only: never initialize the library or execute generated native code.

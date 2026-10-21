@@ -41,9 +41,9 @@ EMXX=/path/to/emsdk/upstream/emscripten/em++ npm run build
 
 ## V8 大函数限制
 
-纯 JS 和 WASM 均保留 `-O3`。纯 JS 在 wasm-opt **和后续 wasm2js** 阶段设置 `--one-caller-inline-max-function-size=500`，避免默认无限制的单调用者内联把整个建图/Crowd 流程合并成大函数。构建临时创建 Binaryen 工具视图，并包装 wasm2js 传入参数；退出后删除临时目录，不修改 emsdk 或官方 C++ 源码。WASM 不使用该限制。
+纯 JS 和 WASM 均保留 `-O3`。纯 JS 另设置 LLVM `-mllvm -inline-threshold=50`，并在 wasm-opt **和后续 wasm2js** 阶段设置 `--one-caller-inline-max-function-size=500`，避免默认无限制的单调用者内联把整个建图/Crowd 流程合并成大函数。构建临时创建 Binaryen 工具视图，并包装 wasm2js 传入参数；退出后删除临时目录，不修改 emsdk 或官方 C++ 源码。WASM 不使用该限制。
 
-构建和 `npm test` 都会编译检查**所有函数**的 V8 bytecode，任意函数超过 **61,440 字节**就失败；不依赖压缩函数名，也不执行库初始化。此预算沿用引擎 `scripts/checkJsBytecode.mjs`，不是 JS 源码字符数限制。检查器只保存函数名与字节码大小，不保留完整反汇编。
+构建和 `npm test` 都会编译检查**所有函数**的 V8 bytecode，任意函数超过 **51,200 字节（50 KiB）**就失败；不依赖压缩函数名，也不执行库初始化。这比引擎 `scripts/checkJsBytecode.mjs` 的 61,440 字节门槛再保留至少 10 KiB 余量，不是 JS 源码字符数限制。检查器只保存函数名与字节码大小，不保留完整反汇编。
 
 ```sh
 npm run check:bytecode
@@ -51,7 +51,7 @@ npm run check:bytecode
 JS_BYTECODE_NODE=/path/to/Electron npm run check:bytecode
 ```
 
-不同 V8 版本的字节码大小和优化策略可能变化；更新 Node/Electron 或工具链后应重新检查。61,440 字节是当前构建预算，满足预算不代表所有函数一定会被运行时优化。外部引擎检查脚本固定监控旧产物函数名，不能直接复用其旧 watchlist 判断新产物。
+不同 V8 版本的字节码大小和优化策略可能变化；更新 Node/Electron 或工具链后应重新检查。51,200 字节是当前构建预算，满足预算不代表所有函数一定会被运行时优化。外部引擎检查脚本固定监控旧产物函数名，不能直接复用其旧 watchlist 判断新产物。
 
 ## 加载与小游戏约定
 

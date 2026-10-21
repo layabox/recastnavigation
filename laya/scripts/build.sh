@@ -23,8 +23,9 @@ binaryen_root=$("$(dirname "$emxx_path")/em-config" BINARYEN_ROOT)
 node scripts/prepare-binaryen.mjs "$binaryen_root" "$bounded_root"
 run_compiler() {
     if [ "$backend" = js ]; then
+        # Bound LLVM inlining too; Binaryen alone leaves almost no V8 size headroom.
         EM_BINARYEN_ROOT="$bounded_root" RECAST_REAL_WASM2JS="$binaryen_root/bin/wasm2js" \
-            "$EMXX" -sBINARYEN_EXTRA_PASSES=--one-caller-inline-max-function-size=500 "$@"
+            "$EMXX" -mllvm -inline-threshold=50 -sBINARYEN_EXTRA_PASSES=--one-caller-inline-max-function-size=500 "$@"
     else
         "$EMXX" "$@"
     fi
