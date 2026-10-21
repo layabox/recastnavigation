@@ -16,6 +16,33 @@
 #include <vector>
 using namespace emscripten;
 namespace laya {
+// Explicit Laya area-zero meshes are subtractive geometry. Upstream's span
+// merge intentionally prefers the larger area ID, so retain their rasterized
+// footprint separately. Slope-rejected triangles must not enter this mask.
+bool applyUnwalkableMask(rcContext &ctx, rcHeightfield &hf, const std::vector<float> &verts,
+                         const std::vector<int> &tris, int climb) {
+    if (tris.empty())
+        return true;
+    auto mask = std::unique_ptr<rcHeightfield, decltype(&rcFreeHeightField)>(rcAllocHeightfield(),
+                                                                         rcFreeHeightField);
+    if (!mask || !rcCreateHeightfield(&ctx, *mask, hf.width, hf.height, hf.bmin, hf.bmax, hf.cs, hf.ch))
+        return false;
+    for (size_t i = 0; i < tris.size(); i += 3)
+        if (!rcRasterizeTriangle(&ctx, &verts[tris[i] * 3], &verts[tris[i + 1] * 3],
+                                 &verts[tris[i + 2] * 3], 1, *mask, climb))
+            return false;
+    for (int i = 0; i < hf.width * hf.height; ++i)
+        for (rcSpan *span = hf.spans[i]; span; span = span->next)
+            for (const rcSpan *blocked = mask->spans[i]; blocked; blocked = blocked->next)
+                // Match overlapping solids at the same surface, using Recast's
+                // merge tolerance. Do not project obstacles onto upper floors.
+                if (span->smin <= blocked->smax && blocked->smin <= span->smax &&
+                    std::abs(int(span->smax) - int(blocked->smax)) <= climb) {
+                    span->area = RC_NULL_AREA;
+                    break;
+                }
+    return true;
+}
 template <class T> std::vector<T> read(val a) {
     return convertJSArrayToNumberVector<T>(a);
 }
@@ -208,6 +235,10 @@ struct Mesh {
             if (ny < 0)
                 std::swap(tris[i + 1], tris[i + 2]);
         }
+        std::vector<int> unwalkableTris;
+        for (size_t i = 0; i < areas.size(); ++i)
+            if (areas[i] == RC_NULL_AREA)
+                unwalkableTris.insert(unwalkableTris.end(), tris.begin() + i * 3, tris.begin() + i * 3 + 3);
         rcClearUnwalkableTriangles(&ctx, cfg.walkableSlopeAngle, verts.data(), verts.size() / 3, tris.data(),
                                    tris.size() / 3, areas.data());
         auto hf = std::unique_ptr<rcHeightfield, decltype(&rcFreeHeightField)>(rcAllocHeightfield(),
@@ -220,6 +251,10 @@ struct Mesh {
         rcFilterLowHangingWalkableObstacles(&ctx, cfg.walkableClimb, *hf);
         rcFilterLedgeSpans(&ctx, cfg.walkableHeight, cfg.walkableClimb, *hf);
         rcFilterWalkableLowHeightSpans(&ctx, cfg.walkableHeight, *hf);
+        // Apply after filters (which can promote null spans), before compaction
+        // and erosion so obstacles also receive agent-radius clearance.
+        if (!applyUnwalkableMask(ctx, *hf, verts, unwalkableTris, cfg.walkableClimb))
+            return false;
         auto chf = std::unique_ptr<rcCompactHeightfield, decltype(&rcFreeCompactHeightfield)>(
             rcAllocCompactHeightfield(), rcFreeCompactHeightfield);
         if (!chf || !rcBuildCompactHeightfield(&ctx, cfg.walkableHeight, cfg.walkableClimb, *hf, *chf))

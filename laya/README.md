@@ -146,3 +146,5 @@ LAYAAIR_ROOT=/absolute/path/to/LayaAir npm run test:engine
 ## 来源
 
 `src/laya-recast.cpp` 是根据现有 LayaAir 接口重建的胶水，不是找回的旧胶水原件；原编译命令不可唯一还原，此配方通过回归验证。上游差异及层合并问题见 [对比记录](docs/UPSTREAM-COMPARISON.md)。Recast/Detour 与参考的 Demo helper 遵循仓库根目录 `License.txt`。
+
+共面不可走网格使用绑定层的高度匹配掩码处理，官方 span 合并和 layers 算法不变。`npm test` 含每后端 96 项障碍回归（形状/分区/顺序/孔洞/上层地面），引擎集成含真实 2D 三种障碍的阻挡、绕行和移除验证。详见 [验证记录](docs/VALIDATION.md#共面-unwalk-网格障碍回归)。

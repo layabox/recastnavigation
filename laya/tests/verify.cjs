@@ -80,6 +80,11 @@ const golden = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/api.jso
         if(geometry.status!==0)throw new Error(`${backend}: geometry update regression failed\n${geometry.stderr}`);
         console.log(`PASS ${backend}: 17 geometry update and borrowed-view checks`);
         checks += 17;
+        const obstacles=spawnSync(process.execPath,[path.join(__dirname,'obstacle-regression.cjs'),file],
+            {encoding:'utf8',maxBuffer:1024*1024});
+        if(obstacles.status!==0)throw new Error(`${backend}: obstacle regression failed\n${obstacles.stderr}`);
+        console.log(`PASS ${backend}: 96 obstacle geometry checks`);
+        checks += 96;
     }
     const wasmFile = path.join(output,'recast-navigation-wasm.js');
     for (const streaming of [true,false]) {
