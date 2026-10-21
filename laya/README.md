@@ -1,0 +1,112 @@
+# LayaAir Recast JS / WASM
+
+在官方 Recast/Detour 源码上添加 LayaAir Embind 胶水，独立编译纯 JS 和 JS/WASM。所有新增内容集中于 `laya/`，不修改官方算法、CMake、Demo 或根目录文档。
+
+当前审查的官方基线：`9f4ce64458dfae86e1239c525ddc219c4e9e06f1`。默认使用官方原生 layers 语义，保留官方 areaType 修复，不提供恢复旧 layers bug 的模式。最大坡度过滤由胶水显式执行。
+
+## 构建
+
+要求：Node.js >= 20，Emscripten **3.1.64**，Git checkout（保留提交历史）。安装并激活 emsdk 后：
+
+```sh
+git clone https://github.com/layabox/recastnavigation.git
+cd recastnavigation/laya
+npm ci
+npm run build
+npm test
+```
+
+无需另找 Recast 源码，也不需要 LayaAir 引擎仓库或引擎的 node_modules。构建直接使用本 fork 的 `Recast/`、`Detour/`、`DetourCrowd/`。
+
+如果 em++ 不在 PATH：
+
+```sh
+EMXX=/path/to/emsdk/upstream/emscripten/em++ npm run build
+```
+
+| 配置 | 默认值/说明 |
+| --- | --- |
+| `EMXX` | `em++`，要求已激活 Emscripten 3.1.64 |
+| `RECAST_OUTPUT` | `laya/dist`，可设置绝对输出路径 |
+| `RECAST_BACKENDS` | `wasm js`，可指定 `wasm` 或 `js` 单独构建 |
+| layers | 始终使用官方原生算法；`RECAST_LAYER_MODE=legacy` 会报错 |
+
+`dist/` 输出：
+
+- `recast-navigation.js`：纯 JS，`window.Recast()` 返回就绪 Promise。
+- `recast-navigation-wasm.js`、`recast-navigation-wasm.wasm`：必须配套更新，文件名保持原约定。
+- `source.json`、`manifest.json`：官方基线、当前 fork 提交、native 源码验证结果、工具链和配方/产物 SHA-256。
+
+构建不自动复制、安装或修改任何引擎文件。生成文件和 node_modules 不提交到 Git。
+
+## 加载与小游戏约定
+
+WASM 脚本保留以下模块外层包装：
+
+```js
+window.Recast = Laya.WasmAdapter.create(Recast, "recast-navigation-wasm.wasm");
+```
+
+浏览器默认从 JS 同目录加载 WASM，保留 `locateFile` 路径覆盖、流式加载和 ArrayBuffer 回退；小游戏由 `WasmAdapter.instantiateWasm` 接管实例化并应用资源映射。引擎包装后的入口是 `window.Recast()`，裸模块工厂才接受 Emscripten options。
+
+构建继续使用 `MODULARIZE=1`、`EXPORT_NAME=Recast`、`ENVIRONMENT=web`、`DYNAMIC_EXECUTION=0`、`WASM_BIGINT=0`、内存增长和 `_malloc/_free` 导出；esbuild 降低到 ES2017 语法。不会加入 Node 文件系统加载分支、动态生成 JS 或 BigInt heap views。
+
+公开方法和历史拼写保持一致，例如 `transfromData`、`addCovexVoume`；状态码和原生 area bits、借用 TypedArray、Crowd 输出布局也有回归检查。对旧二进制的两个有意变化是：最大坡度限制生效，以及 layers 保留官方区域类型边界。
+
+## 测试
+
+`npm test` 无需引擎，覆盖 53 组检查：
+
+- 原模块类、方法参数、属性和枚举；关键返回类型、状态码、原生 mask 和几何缓存行为。
+- 六个场景，每场景 480 帧 Crowd 输出、状态和路径的严格哈希；覆盖三分区、断路、off-mesh link、tile 重建与 agent 增删。
+- 45° 坡面在 0°/30°/60° 最大坡度下的完整路径结果，组合三种分区和正反绕序，JS/WASM 各 18 项。
+- 浏览器相对目录、query/hash、流式回退和 URL 映射；无 document / 标准 WebAssembly / TextDecoder / BigInt typed arrays，禁止动态生成 JS 的宿主。
+
+API 基准来自原 LayaAir WASM；native layers 行为基准独立捕获于官方 2024/Layabox 源码的原生分层算法。只忽略耗时和失败 nearest-poly 查询中原库未初始化的坐标，不用浮点容差掩盖正常行为差异。适配器快照来源见 `tests/fixtures/provenance.json`。
+
+需要单独验证某个输出目录时：
+
+```sh
+node tests/verify.cjs /absolute/path/to/output
+node tests/slope-regression.cjs /absolute/path/to/recast-navigation-wasm.js
+```
+
+可选的引擎集成回归需要已有 LayaAir 构建：
+
+```sh
+# 在引擎 checkout 中先运行 npm run build
+LAYAAIR_ROOT=/absolute/path/to/LayaAir npm run test:engine
+```
+
+该命令以只读方式载入引擎的 build/libs，在隔离 VM 中注入本 fork 的模块，JS/WASM 各执行 65 项 2D/3D 导航检查，不复制文件进引擎。宿主模拟测试不能替代淘宝、微信、抖音真机验收。
+
+## 同步官方上游
+
+`laya/` 独立于官方目录，正常 merge 会保留本地绑定；不要用强制覆盖分支来代替合并。
+
+```sh
+# 在仓库根目录；如果尚未配置 upstream：
+git remote add upstream https://github.com/recastnavigation/recastnavigation.git
+git fetch upstream
+# 检查变更后，在测试分支合并：
+git switch -c codex/update-recast
+git merge upstream/main
+```
+
+`source-lock.json` 固定的是已审查的官方提交和 **42 个 native .h/.cpp 的内容哈希**，不是要求 fork 的 HEAD 永远不变。新增 `laya/` 提交、上游仅修改文档/CMake 时不会使构建失效；native 源码新增、删除或改变时，构建会明确拒绝未审查变更。
+
+确认要采用新的官方算法后：
+
+```sh
+cd laya
+npm run lock-source -- <reviewed-full-official-commit-sha>
+npm run build
+npm test
+LAYAAIR_ROOT=/absolute/path/to/LayaAir npm run test:engine
+```
+
+锁文件更新不会重录行为基准。若算法行为有变化，先查明原因，再决定是否接受并显式记录，不能仅为通过测试而覆盖基准。Emscripten 升级另行验证，以便区分算法变化和小游戏加载代码变化。
+
+## 来源
+
+`src/laya-recast.cpp` 是根据现有 LayaAir 接口重建的胶水，不是找回的旧胶水原件；原编译命令不可唯一还原，此配方通过回归验证。上游差异及层合并问题见 [对比记录](docs/UPSTREAM-COMPARISON.md)。Recast/Detour 与参考的 Demo helper 遵循仓库根目录 `License.txt`。

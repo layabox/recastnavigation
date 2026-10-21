@@ -1,0 +1,502 @@
+{
+  "dtConvexVolume": {
+    "args": 0,
+    "prototype": {
+      "addCovexVoume": {
+        "args": 5
+      },
+      "deleteCovexVoume": {
+        "args": 1
+      },
+      "setIs3D": {
+        "args": 1
+      }
+    }
+  },
+  "dtCrowd": {
+    "args": 0,
+    "prototype": {
+      "addAgent": {
+        "args": 2
+      },
+      "getAgent": {
+        "args": 1
+      },
+      "getAgentCount": {
+        "args": 0
+      },
+      "getFilter": {
+        "args": 1
+      },
+      "init": {
+        "args": 3
+      },
+      "removeAgent": {
+        "args": 1
+      },
+      "requestMoveTarget": {
+        "args": 2
+      },
+      "requestMoveVelocity": {
+        "args": 2
+      },
+      "update": {
+        "args": 1
+      }
+    }
+  },
+  "dtCrowdAgent": {
+    "args": 0,
+    "prototype": {
+      "active": {
+        "get": true,
+        "set": true
+      },
+      "getCurDir": {
+        "args": 1
+      },
+      "getCurPos": {
+        "args": 1
+      },
+      "getparams": {
+        "args": 0
+      },
+      "state": {
+        "get": true,
+        "set": true
+      },
+      "targetRef": {
+        "get": true,
+        "set": true
+      },
+      "targetState": {
+        "get": true,
+        "set": true
+      }
+    }
+  },
+  "dtCrowdAgentParams": {
+    "args": 0,
+    "prototype": {
+      "collisionQueryRange": {
+        "get": true,
+        "set": true
+      },
+      "height": {
+        "get": true,
+        "set": true
+      },
+      "maxAcceleration": {
+        "get": true,
+        "set": true
+      },
+      "maxSpeed": {
+        "get": true,
+        "set": true
+      },
+      "obstacleAvoidanceType": {
+        "get": true,
+        "set": true
+      },
+      "pathOptimizationRange": {
+        "get": true,
+        "set": true
+      },
+      "queryFilterType": {
+        "get": true,
+        "set": true
+      },
+      "radius": {
+        "get": true,
+        "set": true
+      },
+      "separationWeight": {
+        "get": true,
+        "set": true
+      },
+      "updateFlags": {
+        "get": true,
+        "set": true
+      }
+    }
+  },
+  "dtFloatVector": {
+    "args": 0,
+    "prototype": {
+      "get": {
+        "args": 1
+      },
+      "push_back": {
+        "args": 1
+      },
+      "resize": {
+        "args": 2
+      },
+      "set": {
+        "args": 2
+      },
+      "size": {
+        "args": 0
+      }
+    }
+  },
+  "dtFree": {
+    "args": 1,
+    "prototype": {}
+  },
+  "dtFreeCrowd": {
+    "args": 1,
+    "prototype": {}
+  },
+  "dtFreeNavMesh": {
+    "args": 1,
+    "prototype": {}
+  },
+  "dtFreeNavMeshQuery": {
+    "args": 1,
+    "prototype": {}
+  },
+  "dtMeshHeader": {
+    "args": 0,
+    "prototype": {
+      "boundMax": {
+        "args": 0
+      },
+      "boundMin": {
+        "args": 0
+      },
+      "detailMeshCount": {
+        "get": true,
+        "set": true
+      },
+      "detailTriCount": {
+        "get": true,
+        "set": true
+      },
+      "detailVertCount": {
+        "get": true,
+        "set": true
+      },
+      "layer": {
+        "get": true,
+        "set": true
+      },
+      "magic": {
+        "get": true,
+        "set": true
+      },
+      "maxLinkCount": {
+        "get": true,
+        "set": true
+      },
+      "polyCount": {
+        "get": true,
+        "set": true
+      },
+      "userId": {
+        "get": true,
+        "set": true
+      },
+      "vertCount": {
+        "get": true,
+        "set": true
+      },
+      "walkableClimb": {
+        "get": true,
+        "set": true
+      },
+      "walkableHeight": {
+        "get": true,
+        "set": true
+      },
+      "walkableRadius": {
+        "get": true,
+        "set": true
+      },
+      "x": {
+        "get": true,
+        "set": true
+      },
+      "y": {
+        "get": true,
+        "set": true
+      }
+    }
+  },
+  "dtMeshTile": {
+    "args": 0,
+    "prototype": {
+      "getPolyDetail": {
+        "args": 1
+      },
+      "getPolys": {
+        "args": 1
+      },
+      "getVerts": {
+        "args": 0
+      },
+      "getdetailTris": {
+        "args": 0
+      },
+      "getdetailVerts": {
+        "args": 0
+      },
+      "getheader": {
+        "args": 0
+      }
+    }
+  },
+  "dtNavMesh": {
+    "args": 0,
+    "prototype": {
+      "addTile": {
+        "args": 5
+      },
+      "getMaxTiles": {
+        "args": 0
+      },
+      "getOffMeshConnectionPolyEndPoints": {
+        "args": 4
+      },
+      "getPolyArea": {
+        "args": 1
+      },
+      "getPolyFlags": {
+        "args": 1
+      },
+      "getTile": {
+        "args": 1
+      },
+      "getTileRefAt": {
+        "args": 3
+      },
+      "init": {
+        "args": 4
+      },
+      "removeTile": {
+        "args": 2
+      }
+    }
+  },
+  "dtNavMeshQuery": {
+    "args": 0,
+    "prototype": {
+      "closestPointOnPoly": {
+        "args": 2
+      },
+      "closestPointOnPolyByRefPointData": {
+        "args": 1
+      },
+      "findDistanceToWall": {
+        "args": 3
+      },
+      "findNearestPoly": {
+        "args": 3
+      },
+      "findPath": {
+        "args": 4
+      },
+      "findRandomPoint": {
+        "args": 2
+      },
+      "findRandomPointAroundCircle": {
+        "args": 4
+      },
+      "findStraightPath": {
+        "args": 5
+      },
+      "getPolyHeight": {
+        "args": 2
+      },
+      "init": {
+        "args": 2
+      },
+      "moveAlongSurface": {
+        "args": 5
+      }
+    }
+  },
+  "dtNavTileCache": {
+    "args": 0,
+    "prototype": {
+      "destroy": {
+        "args": 0
+      },
+      "getTriIndexCount": {
+        "args": 0
+      },
+      "getTriVertexCount": {
+        "args": 0
+      },
+      "getTris": {
+        "args": 0
+      },
+      "getVerts": {
+        "args": 0
+      },
+      "init": {
+        "args": 1
+      },
+      "setFlag": {
+        "args": 1
+      },
+      "transfromData": {
+        "args": 1
+      }
+    }
+  },
+  "dtNavTileData": {
+    "args": 0,
+    "prototype": {
+      "destroy": {
+        "args": 0
+      },
+      "setTriFlag": {
+        "args": 1
+      },
+      "setTriIndex": {
+        "args": 1
+      },
+      "setTriVertex": {
+        "args": 1
+      }
+    }
+  },
+  "dtOffMeshConnection": {
+    "args": 0,
+    "prototype": {
+      "addOffMeshConnection": {
+        "args": 6
+      },
+      "deleteOffMeshConnection": {
+        "args": 1
+      }
+    }
+  },
+  "dtPoly": {
+    "args": 0,
+    "prototype": {
+      "areaAndtype": {
+        "get": true,
+        "set": true
+      },
+      "firstLink": {
+        "get": true,
+        "set": true
+      },
+      "flags": {
+        "get": true,
+        "set": true
+      },
+      "getArea": {
+        "args": 0
+      },
+      "getNeis": {
+        "args": 1
+      },
+      "getType": {
+        "args": 0
+      },
+      "getVerts": {
+        "args": 0
+      },
+      "vertCount": {
+        "get": true,
+        "set": true
+      }
+    }
+  },
+  "dtPolyDetail": {
+    "args": 0,
+    "prototype": {
+      "triBase": {
+        "get": true,
+        "set": true
+      },
+      "triCount": {
+        "get": true,
+        "set": true
+      },
+      "vertBase": {
+        "get": true,
+        "set": true
+      },
+      "vertCount": {
+        "get": true,
+        "set": true
+      }
+    }
+  },
+  "dtPolyRefVector": {
+    "args": 0,
+    "prototype": {
+      "get": {
+        "args": 1
+      },
+      "push_back": {
+        "args": 1
+      },
+      "resize": {
+        "args": 2
+      },
+      "set": {
+        "args": 2
+      },
+      "size": {
+        "args": 0
+      }
+    }
+  },
+  "dtQueryFilter": {
+    "args": 0,
+    "prototype": {
+      "getAreaCost": {
+        "args": 1
+      },
+      "getExcludeFlags": {
+        "args": 0
+      },
+      "getIncludeFlags": {
+        "args": 0
+      },
+      "setAreaCost": {
+        "args": 2
+      },
+      "setExcludeFlags": {
+        "args": 1
+      },
+      "setIncludeFlags": {
+        "args": 1
+      }
+    }
+  },
+  "dtStatusFailed": {
+    "args": 1,
+    "prototype": {}
+  },
+  "dtStatusSucceed": {
+    "args": 1,
+    "prototype": {}
+  },
+  "dtStraightPathFlags": {
+    "args": 0,
+    "prototype": {},
+    "values": {
+      "DT_STRAIGHTPATH_START": 1,
+      "DT_STRAIGHTPATH_END": 2,
+      "DT_STRAIGHTPATH_OFFMESH_CONNECTION": 4
+    }
+  },
+  "fixupShortcuts": {
+    "args": 2,
+    "prototype": {}
+  },
+  "mergeCorridorStartMoved": {
+    "args": 3,
+    "prototype": {}
+  },
+  "updateCrowd": {
+    "args": 2,
+    "prototype": {}
+  }
+}

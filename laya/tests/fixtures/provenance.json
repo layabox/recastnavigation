@@ -1,0 +1,8 @@
+{
+  "engineRepository": "https://github.com/layabox/LayaAir",
+  "engineRevision": "8c368ff6cf59049c8132c75f400874ab8e03fa99",
+  "adapterPath": "src/layaAir/laya/utils/WasmAdapter.ts",
+  "adapterSourceSha256": "74c3d0b28d8fc77b07693ef5826327dded3cb160cd7ffd3cb3fc3daa8c4af3e1",
+  "apiFixture": "Captured from the original LayaAir WASM module before reconstruction.",
+  "behaviorFixture": "Captured independently from the official-2024/Layabox source using unmodified upstream layer merging; see native-behavior.json."
+}

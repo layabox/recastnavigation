@@ -1,0 +1,15 @@
+{
+  "name": "@layabox/recast-build",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LayaAir Embind bindings and reproducible Recast JS/WASM builds",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "sh scripts/build.sh",
+    "test": "node tests/verify.cjs",
+    "test:slope": "node tests/slope-regression.cjs",
+    "test:engine": "node tests/run-engine.cjs",
+    "lock-source": "node scripts/update-source-lock.mjs"
+  },
+  "devDependencies": { "esbuild": "0.25.10" }
+}
